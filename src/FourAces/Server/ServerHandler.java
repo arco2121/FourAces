@@ -5,10 +5,9 @@ import Common.FACP;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import static Common.Utility.Version;
-import static Common.Utility.outer;
+import static Common.Utility.*;
 
-public class Handler {
+public class ServerHandler {
 
     public static final FACP.Role role = FACP.Role.SERVER;
     public static final int PORT = 5000;
@@ -38,7 +37,7 @@ public class Handler {
 
             Socket s1 = server.accept();
             Socket s2 = server.accept();
-            GameCenter game = new GameCenter(rows, columns, circle, cross);
+            Core game = new Core(rows, columns, circle, cross);
 
             ClientHandler client1 = new ClientHandler(0, s1, game);
             ClientHandler client2 = new ClientHandler(1, s2, game);
@@ -46,6 +45,13 @@ public class Handler {
             game.addPlayer(1, client2);
             client1.start();
             client2.start();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    FACP.CommonMessage end = new FACP.CommonMessage(FACP.ActionType.END, role);
+                    if(securityOn) end.lock(globalPassword);
+                    game.broadcast(end);
+                } catch (Exception ignored) {}
+            }));
 
         } catch (Exception e) {
             outer.println("\nServer Error:\t" + e.getMessage());

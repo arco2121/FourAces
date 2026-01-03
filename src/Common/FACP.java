@@ -1,6 +1,10 @@
 package Common;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import java.io.Serializable;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.HashMap;
 
 //Four Aces Common Protocol
@@ -17,15 +21,45 @@ public class FACP {
         SERVER, CLIENT
     }
 
+    public static class Security {
+        private static final int ITERATIONS = 65536;
+        private static final int KEY_LENGTH = 256;
+        public static final String ALGORITHM = "PBKDF2WithHmacSHA256";
+
+        public static String hash(char[] password) throws Exception {
+            byte[] salt = new byte[16];
+            SecureRandom.getInstanceStrong().nextBytes(salt);
+
+            PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance(ALGORITHM);
+
+            byte[] hash = skf.generateSecret(spec).getEncoded();
+
+            return Base64.getEncoder().encodeToString(salt) + ":" + Base64.getEncoder().encodeToString(hash);
+        }
+
+        public static boolean verifyHash(char[] password, String stored) throws Exception {
+            String[] parts = stored.split(":");
+            byte[] salt = Base64.getDecoder().decode(parts[0]);
+            byte[] hash = Base64.getDecoder().decode(parts[1]);
+
+            PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, hash.length * 8);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance(ALGORITHM);
+            byte[] testHash = skf.generateSecret(spec).getEncoded();
+            return java.security.MessageDigest.isEqual(hash, testHash);
+        }
+    }
+
     public static class CommonMessage implements Serializable {
         private ActionType type;
         public final Role from;
         private final HashMap<String, Object> paramas = new HashMap<>();
         private boolean lockMessage = false;
+        private String hashCode = null;
 
-        public CommonMessage(ActionType type) {
+        public CommonMessage(ActionType type, Role role) {
             this.type = type;
-            this.from = Role.SERVER;
+            this.from = role;
         }
 
         public void setParam(String key, Object value) {
@@ -38,12 +72,39 @@ public class FACP {
                 this.type = type;
         }
 
-        public ActionType getAction() { return type; }
+        public ActionType getAction() { return lockMessage ? null : type; }
 
         public Object getParam(String key) {
-            return paramas.get(key);
+            if(!lockMessage)
+                return paramas.get(key);
+            return null;
         }
 
-        public void lock() { lockMessage = true; }
+        public boolean unLock(String password) {
+            if(!lockMessage) return false;
+            try {
+                if(Security.verifyHash(password.toCharArray(), hashCode)) {
+                    lockMessage = false;
+                    hashCode = null;
+                    return true;
+                }
+                return false;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        public boolean isLocked() { return lockMessage; }
+
+        public boolean lock(String password) {
+            if(lockMessage) return false;
+            try {
+                lockMessage = true;
+                hashCode = Security.hash(password.toCharArray());
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     }
 }

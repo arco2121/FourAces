@@ -11,13 +11,17 @@ public class InputFromServer extends Thread {
 
     @Override
     public void run() {
+        Utility.outer.print(",,");
         while (true) {
-            String line = Utility.inner.nextLine();
-            if (line.equalsIgnoreCase("exit"))
-                System.exit(0);
-            try {
-                core.sendMove(Integer.parseInt(line));
-            } catch (Exception ignored) {}
+           if(core.isMyTurn()) {
+               Utility.outer.println("\nMove :");
+               String line = Utility.inner.nextLine();
+               if (line.equalsIgnoreCase("exit"))
+                   System.exit(0);
+               try {
+                   core.sendMove(Integer.parseInt(line));
+               } catch (Exception ignored) {}
+           }
         }
     }
 }

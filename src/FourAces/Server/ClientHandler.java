@@ -69,7 +69,10 @@ public class ClientHandler extends Thread {
                 game.handleMessage(id, msg);
             }
         } catch (Exception e) {
-            game.handleMessage(id, new FACP.CommonMessage(FACP.ActionType.END, ServerHandler.role));
+            FACP.CommonMessage end = new FACP.CommonMessage(FACP.ActionType.END, ServerHandler.role);
+            if(Utility.securityOn)
+                end.lock(Utility.globalPassword);
+            game.handleMessage(id, end);
         }
     }
 }

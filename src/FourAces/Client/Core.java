@@ -3,17 +3,19 @@ package FourAces.Client;
 import Common.FACP;
 import Common.Utility;
 
+import javax.swing.*;
 import java.io.ObjectOutputStream;
 
 public class Core {
 
     private char[][] board;
     private char symbol;
-    private String name;
+    public String name;
     private String opponent;
     private boolean myTurn;
     private final ObjectOutputStream out;
     private final boolean auto;
+    private CoreView gui = null;
 
     public Core(String name, ObjectOutputStream out, boolean auto) {
         this.out = out;
@@ -30,28 +32,28 @@ public class Core {
 
         switch (msg.getAction()) {
 
-            case START -> symbol = (char) msg.getParam("symbol");
-
+            case START -> {
+                symbol = (char) msg.getParam("symbol");
+                if(gui != null) SwingUtilities.invokeLater(() -> gui.startBoard());
+            }
             case UPDATE -> {
                 board = (char[][]) msg.getParam("board");
                 opponent = (String) msg.getParam("opponent");
-                printBoard();
+                if(gui != null) SwingUtilities.invokeLater(() -> gui.updateBoard(board)); else printBoard();
             }
-
             case CHANGE_TURN -> {
                 myTurn = true;
                 if (auto) makeAutoMove();
             }
-
             case WAIT -> myTurn = false;
-
-            case INVALID -> Utility.outer.println("Move not valid");
-
+            case INVALID -> {
+                if (gui != null) SwingUtilities.invokeLater(() -> gui.notValidMove());
+                else Utility.outer.println("Move not valid");
+            }
             case END_WIN -> exit("You won");
-
             case END_LOST -> exit("You lost");
-
             case END -> exit("Game terminated");
+
         }
     }
 
@@ -84,11 +86,18 @@ public class Core {
                 Utility.outer.print(c == '\0' ? '.' : c);
             Utility.outer.println();
         }
-        Utility.outer.println("\nTurn of : " + (myTurn ? name : opponent));
+        Utility.outer.println("\nTurn of " + (myTurn ? name : opponent));
     }
 
     private void exit(String msg) {
         Utility.outer.println(msg);
         System.exit(0);
     }
+
+    public void startGui() {
+        if(gui == null)
+            SwingUtilities.invokeLater(() -> gui = new CoreView(this));
+    }
+
+    public boolean isMyTurn() { return myTurn; }
 }

@@ -8,9 +8,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Objects;
 
-import static Common.Utility.Version;
-import static Common.Utility.outer;
-
 public class ClientHandler {
 
     public static final FACP.Role role = FACP.Role.CLIENT;
@@ -20,9 +17,14 @@ public class ClientHandler {
     public static void main(String args[]) {
 
         String name = "FourAcesUser:" + (Math.random() * (100000 + 1) - 1);
-        outer.println("FourAces " + role + "\tv" + Version);
+        outer.println("\nFourAces " + role + "\tv" + Version + "\n");
 
-        if(args.length > 2) {
+        /**
+         * Param 1 => Name
+         * Param 2 => Use Gui (*)
+         * Param 3 => Auto Mode (*)
+         */
+        if(args.length < 1) {
             outer.println("\nNo valid params inserted, using default");
         } else {
             try{
@@ -31,7 +33,8 @@ public class ClientHandler {
                 outer.println("\nNo valid params inserted, using default");
             }
         }
-        boolean auto = !Objects.equals(args[1], "");
+        boolean gui = args.length > 1 ? Objects.equals(args[1], "*") : false;
+        boolean auto = args.length > 2 ? Objects.equals(args[2], "*") : false;
 
         try(Socket socket = new Socket(HOST, PORT)) {
 
@@ -45,14 +48,24 @@ public class ClientHandler {
             out.writeObject(connect);
 
             Core core = new Core(name, out, auto);
-            InputFromServer input = new InputFromServer(core);
-            input.start();
+            outer.print("\nConnected to the host, wait for the game to start");
+            for(int i = 0; i < 3; i++) {
+                Thread.sleep(500);
+                outer.print(".");
+            }
+            outer.print("\n\n");
+            if(!gui) {
+                InputFromServer input = new InputFromServer(core);
+                input.start();
+            } else core.startGui();
             Runtime.getRuntime().addShutdownHook(new Thread (() -> {
                 FACP.CommonMessage end = new FACP.CommonMessage(FACP.ActionType.END, ClientHandler.role);
+                if(securityOn)
+                    end.lock(globalPassword);
                 core.send(end);
                 outer.println("\nYou left the game");
-                System.exit(0);
             }));
+
             while(true) {
                 FACP.CommonMessage message = (FACP.CommonMessage) in.readObject();
                 if(message.isLocked()) {
@@ -63,7 +76,8 @@ public class ClientHandler {
             }
 
         } catch (Exception e) {
-            outer.println("Error: " + e.getMessage());
+            outer.println("\nClient error: " + e.getMessage());
+            System.exit(-1);
         }
     }
 }

@@ -8,6 +8,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Objects;
 
+import static Common.Utility.*;
+
 public class ClientHandler {
 
     public static final FACP.Role role = FACP.Role.CLIENT;
@@ -28,7 +30,8 @@ public class ClientHandler {
             outer.println("\nNo valid params inserted, using default");
         } else {
             try{
-                name = args[0];
+                name = !Objects.equals(args[0], "*") ? args[0] : "";
+                if(Objects.equals(name, "")) throw new Exception("No valid name");
             } catch(Exception e){
                 outer.println("\nNo valid params inserted, using default");
             }
@@ -44,7 +47,7 @@ public class ClientHandler {
             FACP.CommonMessage connect = new FACP.CommonMessage(FACP.ActionType.CONNECT, ClientHandler.role);
             connect.setParam("name", name);
             if(Utility.securityOn)
-                connect.lock(Utility.globalPassword);
+                connect.lock(globalPassword);
             out.writeObject(connect);
 
             Core core = new Core(name, out, auto);
@@ -69,7 +72,7 @@ public class ClientHandler {
             while(true) {
                 FACP.CommonMessage message = (FACP.CommonMessage) in.readObject();
                 if(message.isLocked()) {
-                    boolean check = message.unLock(Utility.globalPassword);
+                    boolean check = message.unLock(globalPassword);
                     if(!check) throw new Exception("Cannot unlock the message from the Client");
                 }
                 core.handle(message);

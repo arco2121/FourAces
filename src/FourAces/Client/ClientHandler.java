@@ -5,7 +5,9 @@ import Common.Utility;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.DatagramSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.Objects;
 
 import static Common.Utility.*;
@@ -15,11 +17,12 @@ public class ClientHandler {
     public static final FACP.Role role = FACP.Role.CLIENT;
     public static final int PORT = 5000;
     public static final String HOST = "localhost";
+    public static final FACP.ComunicationType medium =  FACP.ComunicationType.TCP;
+    public static String name = "FourAcesUser:" + (Math.random() * (100000 + 1) - 1);
 
     public static void main(String args[]) {
 
-        String name = "FourAcesUser:" + (Math.random() * (100000 + 1) - 1);
-        outer.println("\nFourAces " + role + "\tv" + Version + "\n");
+        outer.println("\nFourAces " + role + "\tv" + Version + "\tMethod: " + medium + "\n");
 
         /**
          * Param 1 => Name
@@ -36,8 +39,17 @@ public class ClientHandler {
                 outer.println("\nNo valid params inserted, using default");
             }
         }
-        boolean gui = args.length > 1 ? Objects.equals(args[1], "*") : false;
-        boolean auto = args.length > 2 ? Objects.equals(args[2], "*") : false;
+
+        switch (medium) {
+            case TCP -> processTCP(args);
+            case UDP -> processUDP();
+        }
+
+    }
+
+    public static void processTCP(String[] args) {
+        boolean gui = args.length > 1 && Objects.equals(args[1], "*");
+        boolean auto = args.length > 2 && Objects.equals(args[2], "*");
 
         try(Socket socket = new Socket(HOST, PORT)) {
 
@@ -50,7 +62,7 @@ public class ClientHandler {
                 connect.lock(globalPassword);
             out.writeObject(connect);
 
-            Core core = new Core(name, out, auto);
+            CoreTCP core = new CoreTCP(name, out, auto);
             outer.print("\nConnected to the host, wait for the game to start");
             for(int i = 0; i < 3; i++) {
                 Thread.sleep(500);
@@ -58,7 +70,7 @@ public class ClientHandler {
             }
             outer.print("\n\n");
             if(!gui) {
-                InputFromServer input = new InputFromServer(core);
+                InputFromServerTCP input = new InputFromServerTCP(core);
                 input.start();
             } else core.startGui();
             Runtime.getRuntime().addShutdownHook(new Thread (() -> {
@@ -78,6 +90,97 @@ public class ClientHandler {
                 core.handle(message);
             }
 
+        } catch (Exception e) {
+            outer.println("\nClient error: " + e.getMessage());
+            System.exit(-1);
+        }
+    }
+
+    public static void processUDP() {
+
+        try(DatagramSocket socket = new DatagramSocket(PORT)) {
+
+            InputFromServerUDP input = new InputFromServerUDP(socket);
+            FACP.CommonMessage connect = new FACP.CommonMessage(FACP.ActionType.CONNECT, ClientHandler.role);
+            connect.setParam("name", name);
+            if(Utility.securityOn)
+                connect.lock(globalPassword);
+            input.send(connect);
+            CoreUDP core = new CoreUDP(0,0,null, 0, false);
+            Runtime.getRuntime().addShutdownHook(new Thread (() -> {
+                try {
+                    FACP.CommonMessage end = new FACP.CommonMessage(FACP.ActionType.END, ClientHandler.role);
+                    if (securityOn)
+                        end.lock(globalPassword);
+                    input.send(end);
+                    outer.println("\nYou left the game");
+                } catch (Exception ignored) {}
+            }));
+
+            while (true) {
+                try {
+                    FACP.CommonMessage message = input.receive();
+                    if(message.isLocked()) {
+                        boolean check = message.unLock(globalPassword);
+                        if(!check) throw new Exception("Cannot unlock the message from the Client");
+                    }
+                    switch (message.getAction()) {
+
+                        case START -> {
+                            core = new CoreUDP((int) message.getParam("row"), (int) message.getParam("col"), name, (int) message.getParam("id"), message.getParam("id") == message.getParam("turnOf"));
+                            outer.print("\nConnected to the host, wait for the game to start");
+                            for(int i = 0; i < 3; i++) {
+                                Thread.sleep(500);
+                                outer.print(".");
+                            }
+                            outer.print("\n\n");
+                        }
+
+                        case UPDATE -> {
+                            int seq = (int) message.getParam("seq");
+                            if (seq <= core.lastState) break;
+                            core.board = (char[][]) message.getParam("board");
+                            core.lastState = seq;
+                            int turn = (int) message.getParam("turnOf");
+                            core.printBoard();
+                            core.turn = (turn == core.id);
+                            if (core.turn) {
+                                Utility.outer.println("\nMove :");
+                                String line = Utility.inner.nextLine();
+                                if (line.equalsIgnoreCase("exit"))
+                                    System.exit(0);
+                                try {
+                                    core.sendMove(Integer.parseInt(line), input);
+                                } catch (Exception ignored) {}
+                            }
+                        }
+
+                        case END -> {
+                            outer.println("\nThe game ended");
+                            System.exit(0);
+                        }
+
+                        case END_WIN -> {
+                            outer.println("\nYou won game");
+                            System.exit(0);
+                        }
+
+                        case END_LOST -> {
+                            outer.println("\nYou lost game");
+                            System.exit(0);
+                        }
+
+                        case RESYNC -> {
+                            core.board = (char[][]) message.getParam("board");
+                            core.printBoard();
+                        }
+                    }
+
+                } catch (SocketTimeoutException e) {
+                    FACP.CommonMessage sync = new FACP.CommonMessage(FACP.ActionType.RESYNC, role, globalPassword, securityOn);
+                    input.send(sync);
+                }
+            }
         } catch (Exception e) {
             outer.println("\nClient error: " + e.getMessage());
             System.exit(-1);

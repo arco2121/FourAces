@@ -2,16 +2,16 @@ package FourAces.Client;
 
 import Common.Utility;
 
-public class InputFromServer extends Thread {
-    private final Core core;
+public class InputFromServerTCP extends Thread {
+    private final CoreTCP core;
 
-    public InputFromServer(Core core) {
+    public InputFromServerTCP(CoreTCP core) {
         this.core = core;
     }
 
     @Override
     public void run() {
-        Utility.outer.print(",,");
+        Utility.outer.print("\n");
         while (true) {
            if(core.isMyTurn()) {
                Utility.outer.println("\nMove :");

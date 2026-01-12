@@ -8,15 +8,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ClientHandler extends Thread {
+public class ClientHandlerTCP extends Thread {
 
     private final int id;
     public final String name;
     private final ObjectInputStream in;
     private final ObjectOutputStream out;
-    private final Core game;
+    private final CoreTCP game;
 
-    public ClientHandler(int id, Socket socket, Core game) throws Exception {
+    public ClientHandlerTCP(int id, Socket socket, CoreTCP game) throws Exception {
         this.id = id;
         this.game = game;
         out = new ObjectOutputStream(socket.getOutputStream());
@@ -30,7 +30,7 @@ public class ClientHandler extends Thread {
             socket.close();
             throw new Exception("Invalid connection from the Client");
         }
-        this.name = (String) connectCheck.getParam("opponent");
+        this.name = (String) connectCheck.getParam("name");
         FACP.CommonMessage start = new FACP.CommonMessage(FACP.ActionType.START, ServerHandler.role);
         start.setParam("symbol", game.getSymbol(id));
         if(Utility.securityOn)

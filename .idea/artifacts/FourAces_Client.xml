@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="FourAces_Client">
+    <output-path>$PROJECT_DIR$/out/artifacts/FourAces_Client</output-path>
+    <root id="archive" name="FourAces_Client.jar">
+      <element id="module-output" name="FourAces" />
+    </root>
+  </artifact>
+</component>

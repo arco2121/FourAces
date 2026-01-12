@@ -6,22 +6,22 @@ import Common.Utility;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Core {
+public class CoreTCP {
 
     private final char[][] board;
     private final char[] symbols;
-    private final ClientHandler[] players;
-    private static final List<ClientHandler> handlers = new ArrayList<>();
+    private final ClientHandlerTCP[] players;
+    private static final List<ClientHandlerTCP> handlers = new ArrayList<>();
     private int turn;
 
-    public Core(int rows, int columns, char circle, char cross) {
+    public CoreTCP(int rows, int columns, char circle, char cross) {
         board = new char[rows][columns];
         symbols = new char[]{circle, cross};
-        players = new ClientHandler[2];
+        players = new ClientHandlerTCP[2];
         turn = 0;
     }
 
-    public synchronized void addPlayer(int id, ClientHandler handler) {
+    public synchronized void addPlayer(int id, ClientHandlerTCP handler) {
         players[id] = handler;
         handlers.add(handler);
         if (players[0] != null && players[1] != null) {
@@ -45,7 +45,7 @@ public class Core {
             FACP.CommonMessage end = new FACP.CommonMessage(FACP.ActionType.END, ServerHandler.role);
             if(Utility.securityOn)
                 end.lock(Utility.globalPassword);
-            for (ClientHandler h : players) h.send(msg);
+            for (ClientHandlerTCP h : players) h.send(msg);
             System.exit(0);
             return;
         }
@@ -117,7 +117,7 @@ public class Core {
     }
 
     public static void broadcast(FACP.CommonMessage msg) {
-        for (ClientHandler h : handlers) {
+        for (ClientHandlerTCP h : handlers) {
             h.send(msg);
             h.close();
         }

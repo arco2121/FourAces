@@ -10,7 +10,7 @@ public class CoreView extends JFrame {
     private final BoardView board;
     private final JPanel defaultP;
 
-    public CoreView(Core core) {
+    public CoreView(CoreTCP core) {
         setTitle("FourAces " + ClientHandler.role + "\tv" + Utility.Version + "\t" + core.name);
         setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

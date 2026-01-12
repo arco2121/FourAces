@@ -9,7 +9,7 @@ public class BoardView extends JPanel {
 
     private char[][] board;
 
-    public BoardView(Core core) {
+    public BoardView(CoreTCP core) {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

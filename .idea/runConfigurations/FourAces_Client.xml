@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="FourAces_Client" type="Application" factoryName="Application" singleton="false">
+    <option name="envFilePaths">
+      <option value="$PROJECT_DIR$/.env" />
+    </option>
+    <option name="MAIN_CLASS_NAME" value="FourAces.Client.ClientHandler" />
+    <module name="FourAces" />
+    <option name="PROGRAM_PARAMETERS" value="* *" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

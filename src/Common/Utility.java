@@ -9,4 +9,5 @@ public class Utility {
     public static boolean securityOn = false;
     public static final String globalPassword = DotEnv.get("GLOBAL_PASSWORD");
     public final static String Version = "1.0.0";
+    public final static int MAX_BYTE = 1400;
 }

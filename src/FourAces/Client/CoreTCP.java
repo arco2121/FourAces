@@ -6,7 +6,7 @@ import Common.Utility;
 import javax.swing.*;
 import java.io.ObjectOutputStream;
 
-public class Core {
+public class CoreTCP {
 
     private char[][] board;
     private char symbol;
@@ -17,7 +17,7 @@ public class Core {
     private final boolean auto;
     private CoreView gui = null;
 
-    public Core(String name, ObjectOutputStream out, boolean auto) {
+    public CoreTCP(String name, ObjectOutputStream out, boolean auto) {
         this.out = out;
         this.auto = auto;
         this.name = name;

@@ -14,11 +14,19 @@ public class FACP {
         //Type1
         CONNECT, START, END, END_WIN, END_LOST,
         //Type2
-        MOVE, INVALID, WAIT, CHANGE_TURN, UPDATE
+        MOVE, INVALID, WAIT, CHANGE_TURN, UPDATE,
+        //Type for UDP
+        RESYNC,
+        //For Custom String Commands
+        TEXTUAL
     }
 
     public enum Role {
         SERVER, CLIENT
+    }
+
+    public enum ComunicationType {
+        TCP, UDP
     }
 
     public static class Security {
@@ -61,6 +69,22 @@ public class FACP {
             this.type = type;
             this.from = role;
         }
+        public CommonMessage(String typeTextual, Role role) {
+            this.type = ActionType.TEXTUAL;
+            this.from = role;
+            setParam("TEXTUAL", typeTextual);
+        }
+        public CommonMessage(ActionType type, Role role, String key, boolean doLock) {
+            this.type = type;
+            this.from = role;
+            if(doLock) lock(key);
+        }
+        public CommonMessage(String typeTextual, Role role, String key, boolean doLock) {
+            this.type = ActionType.TEXTUAL;
+            this.from = role;
+            setParam("TEXTUAL", typeTextual);
+            if(doLock) lock(key);
+        }
 
         public void setParam(String key, Object value) {
             if(!lockMessage)
@@ -71,8 +95,15 @@ public class FACP {
             if(!lockMessage)
                 this.type = type;
         }
+        public void setAction(String typeTextual) {
+            if(!lockMessage) {
+                this.type = ActionType.TEXTUAL;
+                setParam("TEXTUAL", typeTextual);
+            }
+        }
 
         public ActionType getAction() { return lockMessage ? null : type; }
+        public String getTextualAction() { return lockMessage && type != ActionType.TEXTUAL ? null : (String) getParam("TEXTUAL");}
 
         public Object getParam(String key) {
             if(!lockMessage)

@@ -2,4 +2,5 @@
 
 ### Server and Client services for a Go 4 game
 
-<a href="/docs">Docs</a>
+## Links
+- <a href="/docs">Java docs</a>

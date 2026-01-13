@@ -17,7 +17,7 @@ public class ClientHandler {
     public static final FACP.Role role = FACP.Role.CLIENT;
     public static final int PORT = 5000;
     public static final String HOST = "localhost";
-    public static final FACP.ComunicationType medium =  FACP.ComunicationType.TCP;
+    public static final FACP.ComunicationType medium =  FACP.ComunicationType.UDP;
     public static String name = "FourAcesUser:" + (Math.random() * (100000 + 1) - 1);
 
     public static void main(String args[]) {

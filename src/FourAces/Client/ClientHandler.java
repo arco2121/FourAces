@@ -6,6 +6,7 @@ import Common.Utility;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Objects;
@@ -98,8 +99,9 @@ public class ClientHandler {
 
     public static void processUDP() {
 
-        try(DatagramSocket socket = new DatagramSocket(PORT)) {
+        try(DatagramSocket socket = new DatagramSocket()) {
 
+            socket.connect(InetAddress.getByName(HOST), PORT);
             InputFromServerUDP input = new InputFromServerUDP(socket);
             FACP.CommonMessage connect = new FACP.CommonMessage(FACP.ActionType.CONNECT, ClientHandler.role);
             connect.setParam("name", name);

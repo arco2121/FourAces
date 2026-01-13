@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Objects;
 
-import static Common.ProtocolToUse.medium;
+import static Common.ProtocolToUse.comunicationType;
 import static Common.Utility.*;
 
 public class ClientHandler {
@@ -22,7 +22,7 @@ public class ClientHandler {
 
     public static void main(String args[]) {
 
-        outer.println("\nFourAces " + role + "\tv" + Version + "\tMethod: " + medium + "\n");
+        outer.println("\nFourAces " + role + "\tv" + Version + "\tMethod: " + comunicationType + "\n");
 
         /**
          * Param 1 => Name
@@ -40,7 +40,7 @@ public class ClientHandler {
             }
         }
 
-        switch (medium) {
+        switch (comunicationType) {
             case TCP -> processTCP(args);
             case UDP -> processUDP();
         }

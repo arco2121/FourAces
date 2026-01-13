@@ -15,10 +15,14 @@ public class ClientHandlerUDP {
     public final SocketAddress address;
     public int lastSeq = -1;
 
-    public ClientHandlerUDP(int id, SocketAddress address, DatagramSocket socket) throws IOException {
+    public ClientHandlerUDP(int id, int col, int row, int turn, SocketAddress address, DatagramSocket socket) throws IOException {
         this.id = id;
         this.address = address;
         FACP.CommonMessage start = new FACP.CommonMessage(FACP.ActionType.START, ServerHandler.role);
+        start.setParam("id", id);
+        start.setParam("col", col);
+        start.setParam("row", row);
+        start.setParam("turnOf", turn);
         if(Utility.securityOn)
             start.lock(Utility.globalPassword);
         transmit(start, socket);

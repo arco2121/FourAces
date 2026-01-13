@@ -8,7 +8,7 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import static Common.ProtocolToUse.medium;
+import static Common.ProtocolToUse.comunicationType;
 import static Common.Utility.*;
 
 public class ServerHandler {
@@ -22,7 +22,7 @@ public class ServerHandler {
 
     public static void main(String[] args) {
 
-        outer.println("\nFourAces " + role + "\tv" + Version + "\tMethod: " + medium + "\n");
+        outer.println("\nFourAces " + role + "\tv" + Version + "\tMethod: " + comunicationType + "\n");
 
         /**
          * Param 1 => Rows
@@ -43,7 +43,7 @@ public class ServerHandler {
             }
         }
 
-        switch (medium) {
+        switch (comunicationType) {
             case TCP -> processTCP();
             case UDP -> processUDP();
         }
@@ -126,7 +126,7 @@ public class ServerHandler {
                     case CONNECT -> {
                         if (players.size() >= 2 || players.containsKey(addr)) continue;
                         int id = players.size();
-                        ClientHandlerUDP pl = new ClientHandlerUDP(id, addr, socket);
+                        ClientHandlerUDP pl = new ClientHandlerUDP(id, rows, columns, game.getTurn(), addr, socket);
                         players.put(addr, pl);
                     }
 
@@ -156,9 +156,7 @@ public class ServerHandler {
 
                     case RESYNC -> {
                         if (players.containsKey(addr)) {
-                            FACP.CommonMessage state = new FACP.CommonMessage(FACP.ActionType.RESYNC, role);
-                            state.setParam("board", game.getBoard());
-                            if (securityOn) state.lock(globalPassword);
+                            FACP.CommonMessage state = game.emitBoard(FACP.ActionType.RESYNC);
                             for (ClientHandlerUDP one : players.values())
                                 one.transmit(state, socket);
                         }

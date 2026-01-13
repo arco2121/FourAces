@@ -62,12 +62,7 @@ public class CoreUDP {
     public synchronized FACP.CommonMessage buildState(ClientHandlerUDP who) {
         FACP.CommonMessage status;
         if (!finished) {
-            status = new FACP.CommonMessage(FACP.ActionType.UPDATE, role);
-            status.setParam("board", board);
-        }
-        else if(who == null) {
-            status = new FACP.CommonMessage(FACP.ActionType.UPDATE, role);
-            status.setParam("board", board);
+            status = emitBoard(FACP.ActionType.UPDATE);
         }
         else if (winner == -1) status = new FACP.CommonMessage(FACP.ActionType.END, role);
         else {
@@ -75,10 +70,17 @@ public class CoreUDP {
             status.setParam("winner", who.id);
         }
         status.setParam("turnOf", turn);
+        status.setParam("seq", stateSeq);
         if(securityOn) status.lock(globalPassword);
         return status;
     }
-    public char[][] getBoard() { return board; }
+
+    public synchronized FACP.CommonMessage emitBoard(FACP.ActionType type) {
+        FACP.CommonMessage status = new FACP.CommonMessage(type, role);
+        status.setParam("board", board);
+        if(securityOn) status.lock(globalPassword);
+        return status;
+    }
     public int getTurn() { return turn; }
     public char getSymbol(int id) { return symbols[id]; }
 }

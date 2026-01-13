@@ -8,13 +8,13 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static Common.ProtocolToUse.medium;
 import static Common.Utility.*;
 
 public class ServerHandler {
 
     public static final FACP.Role role = FACP.Role.SERVER;
     public static final int PORT = 5000;
-    public static final FACP.ComunicationType medium =  FACP.ComunicationType.UDP;
     public static int rows = 5;
     public static int columns = 6;
     public static char circle = 'O';

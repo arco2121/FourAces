@@ -12,7 +12,7 @@ import static FourAces.Client.ClientHandler.role;
 
 public class CoreUDP {
 
-    private int moveCount = 0;
+    public int moveCount = 0;
     public boolean turn = false;
     public int lastState = -1;
     public char[][] board;

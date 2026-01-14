@@ -8,7 +8,7 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import static Common.ProtocolToUse.comunicationType;
+import static Common.TransportToUse.transportType;
 import static Common.Utility.*;
 
 public class ServerHandler {
@@ -22,7 +22,7 @@ public class ServerHandler {
 
     public static void main(String[] args) {
 
-        outer.println("\nFourAces " + role + "\tv" + Version + "\tMethod: " + comunicationType + "\n");
+        outer.println("\nFourAces " + role + "\tv" + Version + "\tMethod: " + transportType + "\n");
 
         /**
          * Param 1 => Rows
@@ -43,7 +43,7 @@ public class ServerHandler {
             }
         }
 
-        switch (comunicationType) {
+        switch (transportType) {
             case TCP -> processTCP();
             case UDP -> processUDP();
         }
@@ -139,18 +139,36 @@ public class ServerHandler {
                         if (seq <= pl.lastSeq || id != game.getTurn()) continue;
                         pl.lastSeq = seq;
                         if (!game.applyMove(col)) continue;
+                        FACP.CommonMessage moveUp =  new FACP.CommonMessage(FACP.ActionType.MOVE, role);
+                        moveUp.setParam("id", id);
+                        if(securityOn) moveUp.lock(globalPassword);
+                        pl.transmit(moveUp,  socket);
                         FACP.CommonMessage state = game.buildState(pl);
                         FACP.ActionType action = state.getAction();
                         int winner = (int) state.getParam("winner");
                         if (securityOn) state.lock(globalPassword);
+                        boolean breakNow = false;
                         for (ClientHandlerUDP one : players.values())
                         {
-                            if(action == FACP.ActionType.UPDATE || action == FACP.ActionType.END)
+                            if(action == FACP.ActionType.UPDATE)
                                 one.transmit(state, socket);
-                            else if(action == FACP.ActionType.END_WIN && winner != one.id)
+                            else if (action == FACP.ActionType.END) {
+                                one.transmit(state, socket);
+                                breakNow = true;
+                            }
+                            else if(action == FACP.ActionType.END_WIN && winner != one.id) {
                                 one.transmit(new FACP.CommonMessage(FACP.ActionType.END_LOST, role, globalPassword, securityOn), socket);
-                            else if(action == FACP.ActionType.END_WIN)
+                                breakNow = true;
+                            }
+                            else if(action == FACP.ActionType.END_WIN) {
                                 one.transmit(new FACP.CommonMessage(FACP.ActionType.END_WIN, role, globalPassword, securityOn), socket);
+                                breakNow = true;
+                            }
+                        }
+                        if (breakNow) {
+                            outer.println("The game finished");
+                            players.clear();
+                            System.exit(0);
                         }
                     }
 

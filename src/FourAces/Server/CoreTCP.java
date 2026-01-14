@@ -116,6 +116,14 @@ public class CoreTCP {
         return count >= 4;
     }
 
+    public static void release() {
+        for (ClientHandlerTCP h : handlers) {
+            h.close();
+            h.disconnect();
+        }
+        handlers.clear();
+    }
+
     public static void broadcast(FACP.CommonMessage msg) {
         for (ClientHandlerTCP h : handlers) {
             h.send(msg);

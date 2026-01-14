@@ -15,10 +15,12 @@ public class ClientHandlerTCP extends Thread {
     private final ObjectInputStream in;
     private final ObjectOutputStream out;
     private final CoreTCP game;
+    private final Socket socket;
 
     public ClientHandlerTCP(int id, Socket socket, CoreTCP game) throws Exception {
         this.id = id;
         this.game = game;
+        this.socket = socket;
         out = new ObjectOutputStream(socket.getOutputStream());
         in = new ObjectInputStream(socket.getInputStream());
         FACP.CommonMessage connectCheck = (FACP.CommonMessage) in.readObject();
@@ -49,6 +51,12 @@ public class ClientHandlerTCP extends Thread {
         try {
             in.close();
             out.close();
+        } catch (IOException ignored) {}
+    }
+
+    public void disconnect() {
+        try {
+            socket.close();
         } catch (IOException ignored) {}
     }
 

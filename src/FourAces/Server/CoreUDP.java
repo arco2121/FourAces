@@ -82,5 +82,4 @@ public class CoreUDP {
         return status;
     }
     public int getTurn() { return turn; }
-    public char getSymbol(int id) { return symbols[id]; }
 }

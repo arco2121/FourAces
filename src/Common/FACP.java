@@ -25,7 +25,7 @@ public class FACP {
         SERVER, CLIENT
     }
 
-    public enum ComunicationType {
+    public enum TransportType {
         TCP, UDP
     }
 

@@ -8,7 +8,7 @@ import java.util.Base64;
 import java.util.HashMap;
 
 //Four Aces Common Protocol
-public class FACP {
+public final class FACP {
 
     public enum ActionType {
         //Type1
@@ -29,7 +29,7 @@ public class FACP {
         TCP, UDP
     }
 
-    public static class Security {
+    private static class Security {
         private static final int ITERATIONS = 65536;
         private static final int KEY_LENGTH = 256;
         public static final String ALGORITHM = "PBKDF2WithHmacSHA256";
@@ -58,7 +58,8 @@ public class FACP {
         }
     }
 
-    public static class CommonMessage implements Serializable {
+    public static final class CommonMessage implements Serializable {
+
         private ActionType type;
         public final Role from;
         private final HashMap<String, Object> paramas = new HashMap<>();
